@@ -1,0 +1,137 @@
+# https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md
+# https://docs.docker.com/compose/intro/history/
+version: "3.8"
+
+services:
+  # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#service-configuration-reference
+
+  redis-server-1:
+    # https://hub.docker.com/r/bitnami/redis
+    # https://github.com/bitnami/containers/tree/main/bitnami/redis
+    # https://bitnami.com/stack/redis
+    image: bitnami/redis
+
+    deploy:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#deploy
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          # docker node update --label-add node-no=1 node1
+          - "node.labels.node-no==1"
+
+    environment:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#environment
+      # https://github.com/bitnami/containers/tree/main/bitnami/redis#environment-variables
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_MASTER_PASSWORD=f7d944fdc84d886fe45990fe282fb6fc
+      - REDIS_PASSWORD=f7d944fdc84d886fe45990fe282fb6fc
+
+    networks:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#networks
+      redis-network:
+
+  redis-server-2:
+    # https://hub.docker.com/r/bitnami/redis
+    # https://github.com/bitnami/containers/tree/main/bitnami/redis
+    # https://bitnami.com/stack/redis
+    image: bitnami/redis
+
+    deploy:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#deploy
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          # docker node update --label-add node-no=node2 node2
+          - "node.labels.node-no==2"
+
+    environment:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#environment
+      # https://github.com/bitnami/containers/tree/main/bitnami/redis#environment-variables
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-server-1
+      - REDIS_MASTER_PASSWORD=f7d944fdc84d886fe45990fe282fb6fc
+      - REDIS_PASSWORD=f7d944fdc84d886fe45990fe282fb6fc
+
+    networks:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#networks
+      redis-network:
+
+  redis-server-3:
+    # https://hub.docker.com/r/bitnami/redis
+    # https://github.com/bitnami/containers/tree/main/bitnami/redis
+    # https://bitnami.com/stack/redis
+    image: bitnami/redis
+
+    deploy:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#deploy
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          # docker node update --label-add node-no=node3 node3
+          - "node.labels.node-no==3"
+
+    environment:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#environment
+      # https://github.com/bitnami/containers/tree/main/bitnami/redis#environment-variables
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-server-1
+      - REDIS_MASTER_PASSWORD=f7d944fdc84d886fe45990fe282fb6fc
+      - REDIS_PASSWORD=f7d944fdc84d886fe45990fe282fb6fc
+
+    networks:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#networks
+      redis-network:
+
+  redis-sentinels:
+    # https://hub.docker.com/r/bitnami/redis-sentinel/
+    # https://github.com/bitnami/containers/tree/main/bitnami/redis-sentinel
+    # https://bitnami.com/stack/redis-sentinel/containers
+    image: bitnami/redis-sentinel
+
+    deploy:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#deploy
+      mode: global
+
+    environment:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#environment
+      # https://github.com/bitnami/containers/tree/main/bitnami/redis-sentinel#environment-variables
+      - REDIS_SENTINEL_MASTER_NAME=default
+      - REDIS_MASTER_SET=default
+      - REDIS_MASTER_HOST=redis-server-1
+      - REDIS_MASTER_PASSWORD=f7d944fdc84d886fe45990fe282fb6fc
+
+    networks:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#networks
+      redis-network:
+
+  redis-insight:
+    # https://hub.docker.com/r/redis/redisinsight
+    # https://github.com/RedisInsight/RedisInsight
+    # https://redis.io/docs/latest/operate/redisinsight/install/install-on-docker/
+    image: redis/redisinsight
+
+    ports:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#ports
+      - "5540:5540"
+
+    deploy:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#deploy
+      mode: replicated
+      replicas: 1
+
+    environment:
+      # https://redis.io/docs/latest/operate/redisinsight/configuration/
+      - name=value
+
+    networks:
+      # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#networks
+      redis-network:
+
+networks:
+  # https://github.com/docker/compose/blob/v1/docs/Compose%20file%20reference%20(legacy)/version-3.md#network-configuration-reference
+  redis-network:
+    name: redis-network
+    driver: overlay
